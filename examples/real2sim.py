@@ -17,6 +17,7 @@ os.chdir('/home/xxb/tacto-main/examples')
 
 log = logging.getLogger(__name__)
 
+##a change
 # width = np.float64(0.1)
 # ## 将位置和方向数据转换为 float64
 # position = np.array([0.5, 0.0, 0.2], dtype=np.float64)
