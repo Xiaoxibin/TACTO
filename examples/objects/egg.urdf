@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<robot name="egg.urdf">
+  <link name="baseLink">
+    <contact>
+      <friction_anchor/>
+      <lateral_friction value="0.5"/> <!-- Adjusted friction to reflect different surface properties -->
+      <rolling_friction value="0.003"/>
+      <spinning_friction value="0.003"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.1"/> <!-- Lighter mass for an egg -->
+      <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0005"/> <!-- Adjusted inertia for a lighter object -->
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="egg.obj" scale="0.015 0.015 0.02"/> <!-- Adjusted scale to reflect the shape of an egg -->
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 0.8 1"/> <!-- Changed color to a typical egg color -->
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="egg.obj" scale="0.015 0.015 0.02"/> <!-- Same scale as visual for consistency -->
+      </geometry>
+    </collision>
+  </link>
+</robot>
