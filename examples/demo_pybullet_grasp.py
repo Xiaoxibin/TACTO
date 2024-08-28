@@ -16,6 +16,9 @@ import tacto
 
 from sawyer_gripper import SawyerGripper
 
+import os
+os.chdir('/home/xxb/tacto/examples')
+
 log = logging.getLogger(__name__)
 
 
