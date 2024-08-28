@@ -14,7 +14,7 @@ from sawyer_gripper import SawyerGripper
 
 import cv2
 import os
-os.chdir('/home/xxb/tacto-main/examples')
+os.chdir('/home/xxb/tacto/examples')
 
 ## 模型相关包
 import torch
@@ -132,7 +132,7 @@ def execute_grasp_and_lift(robot, digits, view_matrix, projection_matrix, steps,
         save_images(step, "data/grasping", rgb_img, depth_img, color_imgs[0], depth_imgs[0])
         time.sleep(0.1)
 
-    # Step 3: Lift the object by 2 cm
+    # Step 3: Lift the object by 1 cm
     move_to_position(robot, digits, steps['lift'], width=width, grip_force=grip_force)
     for step in range(8):
         rgb_img, depth_img = capture_image(view_matrix, projection_matrix)
@@ -267,7 +267,7 @@ def main(cfg):
     data_path = save_dir
 
     ## 末端执行器夹爪宽度
-    width_tomato = 0.04
+    width_tomato = 0.03
 
     ## 获取机器人当前状态
     current_state = robot.get_states()
@@ -277,7 +277,17 @@ def main(cfg):
     ## 预定义步骤位置
     steps = {
         'grasp': np.array([end_effector_position[0], end_effector_position[1], end_effector_position[2] - 0.05]),
-        'lift': np.array([end_effector_position[0], end_effector_position[1], end_effector_position[2] - 0.03])
+        'lift': np.array([end_effector_position[0], end_effector_position[1], end_effector_position[2] - 0.04]),
+        'place':np.array([0.639, 0.322, 0.195 ]),
+        'down':np.array([0.639, 0.322, 0.164]),
+        'origin': np.array([end_effector_position[0], end_effector_position[1], end_effector_position[2] ])
+    }
+
+    ## 定义预测结果的映射
+    prediction_mapping = {
+        0: "overforce",
+        1: "safe grasp",
+        2: "sliding"
     }
 
     move_to_position(robot, digits, steps['grasp'], width=0.1, grip_force=100)
@@ -289,14 +299,26 @@ def main(cfg):
         ## VIVIT模型预测
         output_class, predicted_class = test_module(params, model_path, data_path, width = width_tomato)
 
+        # 将数值映射为标签
+        predicted_label = prediction_mapping[predicted_class]
+
         ## 检查预测结果，并调整夹爪宽度或退出循环
         if predicted_class == 1:
-            print("成功抓取物体，退出循环")
+            print("成功抓取物体")
             break
         else:
-            print(f"滑移检测到, 预测类别: {predicted_class}, 调整夹爪宽度并重试")
-            adjust_width = adjust_end_effector_width(predicted_class, width=0.04)
-            move_to_position(robot, digits, steps['grasp'], width=adjust_width, grip_force=100)
+            print(f"滑移检测到, 预测类别: {predicted_label}, 调整夹爪宽度并重试")
+            width_tomato = adjust_end_effector_width(predicted_class, width=width_tomato)
+            print(f"夹爪调整后宽度：{width_tomato}")
+
+    move_to_position(robot, digits, steps['place'], width=width_tomato, grip_force=100)
+    move_to_position(robot, digits, steps['down'], width=width_tomato, grip_force=100)
+    time.sleep(0.1)
+    move_to_position(robot, digits, steps['down'], width=0.109, grip_force=20)
+    time.sleep(0.1)
+    move_to_position(robot, digits, steps['place'], width=0.109, grip_force=100)
+    time.sleep(0.1)
+    move_to_position(robot, digits, steps['origin'], width=0.109, grip_force=20)
 
     ## Keep the simulation running to observe the result
     while True:
